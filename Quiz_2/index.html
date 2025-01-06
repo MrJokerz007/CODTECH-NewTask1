@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App</title>
+    <style>
+       body {
+            font-family: sans-serif;
+            margin: 0;
+            display: flex; /* Center the quiz area vertically and horizontally */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Make body take up full viewport height */
+            background-color: #f5f5f5;
+        }
+
+        #quiz-area {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 50px; /* Increased padding */
+            width: 800px; /* Increased width */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #question {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        #options-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .option {
+            background-color: #eee;
+            padding: 10px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .option.selected {
+            background-color: #9af8ff;
+        }
+
+        .option.incorrect {
+            background-color: #f9d0c0;
+        }
+
+        .option.correct {
+            background-color: #77ff92;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        #final-results {
+            font-size: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="quiz-area">
+        <h1>Quiz Time!</h1>
+        <p id="question"></p>
+        <div id="options-container"></div>
+        <button id="show-answer-btn">Show Answer</button>
+        <button id="next-btn">Next Question</button>
+    </div>
+
+    <p id="final-results"></p>
+
+    <script>
+        const quizData = [
+            {
+                question: "The Playstation game console was developed by which company?",
+                options: ["Sega", "Sony", "Nintendo", "Capcom"],
+                answer: "Sony"
+            },
+            {
+                question: "Which one of the following is the largest ocean in the world?",
+                options: ["Indian Ocean", "Arctic Ocean", "Pacific Ocean", "Atlantic Ocean"],
+                answer: "Pacific Ocean"
+            },
+            {
+                question: "What year did the Chernobyl disaster occur?",
+                options: ["1983", "1984", "1985", "1986"],
+                answer: "1986"
+            },
+            {
+                question: "What is the smallest country in the world?",
+                options: ["Monaco", "Nauru", "Vatican City", "Tuvalu"],
+                answer: "Vatican City"
+            },
+            {
+                question: "In the following which one food Giant Pandas normally eat?",
+                options: ["Bamboo", "Banana", "Corn", "Fish"],
+                answer: "Bamboo"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedOption = null;
+        let answerShown = false;
+
+        const questionElement = document.getElementById('question');
+        const optionsContainer = document.getElementById('options-container');
+        const nextButton = document.getElementById('next-btn');
+        const showAnswerButton = document.getElementById('show-answer-btn');
+const resultsElement = document.getElementById('final-results');
+
+function displayQuestion() {
+    const currentQuestion = quizData[currentQuestionIndex];
+    questionElement.textContent = currentQuestion.question;
+    optionsContainer.innerHTML = "";
+    answerShown = false;
+
+    currentQuestion.options.forEach(option => {
+        const optionElement = document.createElement('div');
+        optionElement.className = 'option';
+        optionElement.textContent = option;
+        optionElement.addEventListener('click', selectOption);
+        optionsContainer.appendChild(optionElement);
+    });
+
+    showAnswerButton.disabled = true;
+    showAnswerButton.style.display = 'block'; // Always show the button
+    nextButton.disabled = true;
+    nextButton.style.display = 'none';
+}
+
+function selectOption(event) {
+    if (answerShown) return; // Prevent selection after answer is shown
+
+    if (selectedOption) {
+        selectedOption.classList.remove('selected');
+    }
+    selectedOption = event.target;
+    selectedOption.classList.add('selected');
+    showAnswerButton.disabled = false;
+}
+
+function showAnswer() {
+    if (answerShown) return;
+
+    const correctAnswer = quizData[currentQuestionIndex].answer;
+    const options = optionsContainer.children;
+    for (const option of options) {
+        if (option.textContent === correctAnswer) {
+            option.classList.add('correct');
+        } else if (option.classList.contains("selected") && option.textContent !== correctAnswer) {
+            option.classList.add('incorrect');
+        }
+    }
+    showAnswerButton.disabled = true;
+    nextButton.style.display = 'block';
+    nextButton.disabled = false;
+    answerShown = true;
+
+    // Remove click listeners from options after showing the answer
+    const optionElements = document.querySelectorAll('.option');
+    optionElements.forEach(optionElement => {
+        optionElement.removeEventListener('click', selectOption);
+    });
+}
+
+function checkAnswer() {
+    if (!selectedOption && !answerShown) {
+        alert("Please select an answer and view the result.");
+        return;
+    }
+    if(!answerShown){
+        alert("Please view the result");
+        return;
+    }
+
+    const userAnswer = selectedOption ? selectedOption.textContent : null; // Handle cases where no option is selected
+    const correctAnswer = quizData[currentQuestionIndex].answer;
+    if (userAnswer === correctAnswer) {
+        score++;
+    }
+
+    selectedOption = null;
+    currentQuestionIndex++;
+    if (currentQuestionIndex < quizData.length) {
+        displayQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    document.getElementById('quiz-area').style.display = 'none';
+    nextButton.style.display = 'none';
+    showAnswerButton.style.display = 'none';
+    resultsElement.textContent = `You scored ${score} out of ${quizData.length}.`;
+    resultsElement.style.display = 'block';
+}
+
+showAnswerButton.addEventListener('click', showAnswer);
+nextButton.addEventListener('click', checkAnswer);
+displayQuestion();
+</script>
+
+</body>
+</html>
